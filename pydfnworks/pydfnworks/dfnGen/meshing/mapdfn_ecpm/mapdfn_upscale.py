@@ -19,8 +19,8 @@ def mapdfn_porosity(num_cells, cell_fracture_id, aperture, cell_size,
         apertures : numpy array
             array of fracture apertures (likely from DFN.aperture)
 
-        cell_size : float 
-            discretization length in ECPM domain
+        cell_size : list 
+            discretization length in x, y, z of ECPM domain
         
         matrix_porosity : float
             porosity of the matrix cells without fratures 
@@ -40,7 +40,7 @@ def mapdfn_porosity(num_cells, cell_fracture_id, aperture, cell_size,
     for cell_id, fractures in cell_fracture_id.items():
         if len(fractures) > 0:
             for ifrac in fractures:
-                porosity[cell_id] += aperture[ifrac] / cell_size
+                porosity[cell_id] += ((aperture[ifrac] / cell_size[0] + aperture[ifrac] / cell_size[1] + aperture[ifrac] / cell_size[2])/3.0)
         else:
             porosity[cell_id] = matrix_porosity
     return porosity
@@ -61,8 +61,8 @@ def mapdfn_perm_iso(num_cells, cell_fracture_id, transmissivity, cell_size,
         transmissivity : numpy array
             array of fracture transmissivity (k * b)
 
-        cell_size : float 
-            discretization length in ECPM domain
+        cell_size : list 
+            discretization length in x,y,z in ECPM domain
         
         matrix_permeablity : float
             permeability of the matrix cells without fratures 
@@ -83,7 +83,7 @@ def mapdfn_perm_iso(num_cells, cell_fracture_id, transmissivity, cell_size,
     for cell_id, fractures in cell_fracture_id.items():
         if len(fractures) > 0:
             for ifrac in fractures:
-                k_iso[cell_id] += transmissivity[ifrac] / cell_size
+                k_iso[cell_id] += ((transmissivity[ifrac] / cell_size[0] + transmissivity[ifrac] / cell_size[1] + transmissivity[ifrac] / cell_size[2])/3.0) 
     return k_iso
 
 
@@ -115,8 +115,8 @@ def mapdfn_perm_aniso(num_frac,
         T : numpy array
             array of fracture transmissivity (k * b)
 
-        cell_size : float 
-            discretization length in ECPM domain
+        cell_size : list 
+            discretization length in x,y,z ECPM domain
         
         matrix_perm : float
             permeability of the matrix cells without fratures 
@@ -172,16 +172,16 @@ def mapdfn_perm_aniso(num_frac,
                 if lump_diag_terms:  #lump off diagonal terms
                     #because symmetrical doesn't matter if direction of summing is correct, phew!
                     k_aniso[icell][0] += np.sum(
-                        full_tensor[ifrac][0, :3]) / cell_size
+                        full_tensor[ifrac][0, :3]) / cell_size[0]
                     k_aniso[icell][1] += np.sum(
-                        full_tensor[ifrac][1, :3]) / cell_size
+                        full_tensor[ifrac][1, :3]) / cell_size[1]
                     k_aniso[icell][2] += np.sum(
-                        full_tensor[ifrac][2, :3]) / cell_size
+                        full_tensor[ifrac][2, :3]) / cell_size[2]
                 else:  #discard off diagonal terms (default)
                     #fracture_trans is 0 indexed, fracture numbers are 1 indexed
-                    k_aniso[icell][0] += fracture_trans[ifrac][0] / cell_size
-                    k_aniso[icell][1] += fracture_trans[ifrac][1] / cell_size
-                    k_aniso[icell][2] += fracture_trans[ifrac][2] / cell_size
+                    k_aniso[icell][0] += fracture_trans[ifrac][0] / cell_size[0]
+                    k_aniso[icell][1] += fracture_trans[ifrac][1] / cell_size[1]
+                    k_aniso[icell][2] += fracture_trans[ifrac][2] / cell_size[2]
 
             if correction_factor:
                 #correction factor Sweeney et al. 2019 from upscale.py

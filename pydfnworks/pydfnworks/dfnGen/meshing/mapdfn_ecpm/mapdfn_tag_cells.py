@@ -49,8 +49,8 @@ def get_corner(origin, i, j, k, cell_size):
             y index
         k : int
             z index
-        cell_size : float
-            hex cell size 
+        cell_size : list
+            hex cell size in x, y, z 
 
     Returns
     ---------------
@@ -63,44 +63,44 @@ def get_corner(origin, i, j, k, cell_size):
     
     """
     corner = [[
-        origin[0] + i * cell_size, origin[1] + j * cell_size,
-        origin[2] + k * cell_size
+        origin[0] + i * cell_size[0], origin[1] + j * cell_size[1],
+        origin[2] + k * cell_size[2]
     ],
               [
-                  origin[0] + (i + 1) * cell_size, origin[1] + j * cell_size,
-                  origin[2] + k * cell_size
+                  origin[0] + (i + 1) * cell_size[0], origin[1] + j * cell_size[1],
+                  origin[2] + k * cell_size[2]
               ],
               [
-                  origin[0] + (i + 1) * cell_size,
-                  origin[1] + (j + 1) * cell_size, origin[2] + k * cell_size
+                  origin[0] + (i + 1) * cell_size[0],
+                  origin[1] + (j + 1) * cell_size[1], origin[2] + k * cell_size[2]
               ],
               [
-                  origin[0] + i * cell_size, origin[1] + (j + 1) * cell_size,
-                  origin[2] + k * cell_size
+                  origin[0] + i * cell_size[0], origin[1] + (j + 1) * cell_size[1],
+                  origin[2] + k * cell_size[2]
               ],
               [
-                  origin[0] + i * cell_size, origin[1] + j * cell_size,
-                  origin[2] + (k + 1) * cell_size
+                  origin[0] + i * cell_size[0], origin[1] + j * cell_size[1],
+                  origin[2] + (k + 1) * cell_size[2]
               ],
               [
-                  origin[0] + (i + 1) * cell_size, origin[1] + j * cell_size,
-                  origin[2] + (k + 1) * cell_size
+                  origin[0] + (i + 1) * cell_size[0], origin[1] + j * cell_size[1],
+                  origin[2] + (k + 1) * cell_size[2]
               ],
               [
-                  origin[0] + (i + 1) * cell_size,
-                  origin[1] + (j + 1) * cell_size,
-                  origin[2] + (k + 1) * cell_size
+                  origin[0] + (i + 1) * cell_size[0],
+                  origin[1] + (j + 1) * cell_size[1],
+                  origin[2] + (k + 1) * cell_size[2]
               ],
               [
-                  origin[0] + i * cell_size, origin[1] + (j + 1) * cell_size,
-                  origin[2] + (k + 1) * cell_size
+                  origin[0] + i * cell_size[0], origin[1] + (j + 1) * cell_size[1],
+                  origin[2] + (k + 1) * cell_size[2]
               ]]
     return corner
 
 
 def mapdfn_tag_cells(self, origin, num_cells, nx, ny, nz, cell_size):
     """ Identify intersecting fractures for each cell of the ECPM domain.
-    Extent of ECPM domain is determined by nx,ny,nz, and d (see below).
+     Extent of ECPM domain is determined by nx,ny,nz, and d (see below).
      ECPM domain can be smaller than the DFN domain.
      Return numpy array (fracture) that contains for each cell:
      number of intersecting fractures followed by each intersecting fracture id.
@@ -111,14 +111,14 @@ def mapdfn_tag_cells(self, origin, num_cells, nx, ny, nz, cell_size):
             [x,y,z] float coordinates of lower left front corner of DFN domain
         num_cells : int
             Number of cells in the domain 
-        nx : int
+        nx : float
             number of cells in x in ECPM domain
-        ny : int 
+        ny : float 
             number of cells in y in ECPM domain
-        nz : int 
+        nz : float 
             number of cells in z in ECPM domain
-        cell_size : float 
-            discretization length in ECPM domain
+        cell_size : list 
+            discretization length in x,y,z in ECPM domain
         
 
     Returns
@@ -168,12 +168,12 @@ def mapdfn_tag_cells(self, origin, num_cells, nx, ny, nz, cell_size):
         z2 = translation[2] + max_rad
 
         #find indices of nearby cells so don't have to check all of them!
-        i1 = max(0, int((x1 - origin[0]) / cell_size))  #round down
-        i2 = min(nx, int((x2 - origin[0]) / cell_size + 1))  #round up
-        j1 = max(0, int((y1 - origin[1]) / cell_size))
-        j2 = min(ny, int((y2 - origin[1]) / cell_size + 1))
-        k1 = max(0, int((z1 - origin[2]) / cell_size))
-        k2 = min(nz, int((z2 - origin[2]) / cell_size + 1))
+        i1 = max(0, int((x1 - origin[0]) / cell_size[0]))  #round down
+        i2 = min(nx, int((x2 - origin[0]) / cell_size[0] + 1))  #round up
+        j1 = max(0, int((y1 - origin[1]) / cell_size[1]))
+        j2 = min(ny, int((y2 - origin[1]) / cell_size[1] + 1))
+        k1 = max(0, int((z1 - origin[2]) / cell_size[2]))
+        k2 = min(nz, int((z2 - origin[2]) / cell_size[2] + 1))
 
         # use itertools generator
         index_set = itertools.product(range(k1, k2), range(j1, j2),
@@ -182,9 +182,9 @@ def mapdfn_tag_cells(self, origin, num_cells, nx, ny, nz, cell_size):
             # Bounding box check
             # check if cell center is inside radius of fracture
             center = [
-                origin[0] + i * cell_size + 0.5 * cell_size,
-                origin[1] + j * cell_size + 0.5 * cell_size,
-                origin[2] + k * cell_size + 0.5 * cell_size
+                origin[0] + i * cell_size[0] + 0.5 * cell_size[0],
+                origin[1] + j * cell_size[1] + 0.5 * cell_size[1],
+                origin[2] + k * cell_size[2] + 0.5 * cell_size[2]
             ]
             if x1 < center[0] < x2 and y1 < center[1] < y2 and z1 < center[
                     2] < z2:

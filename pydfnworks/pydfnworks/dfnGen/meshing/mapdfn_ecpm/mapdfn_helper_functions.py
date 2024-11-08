@@ -1,7 +1,7 @@
 import os, sys
 
 
-def setup_output_dir(output_dir, jobname):
+def setup_output_dir(output_dir_local, jobname, sub_directory=None):
     """ Create ECPM output directory
 
     Parameters
@@ -18,8 +18,10 @@ def setup_output_dir(output_dir, jobname):
     ------------
         The name is combined with DFN.jobname to be an absolute path DFN.jobname + / + output_dir
     """
-    print(f"--> Creating output directory {output_dir}")
-    output_dir = jobname + os.sep + output_dir
+    print(f"--> Creating output directory {output_dir_local}")
+    output_dir = jobname + os.sep + output_dir_local
+    if sub_directory is not None:
+        output_dir += os.sep + output_dir_local + "_" + sub_directory
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -36,20 +38,18 @@ def setup_output_dir(output_dir, jobname):
     return filenames
 
 
-def setup_domain(domain, cell_size):
+def setup_domain(domain, cell_size,sub_origin=None):
     """ Initialize domain and discretization
 
     Parameters
     -----------------
         domain : dictionary
             Domain size in x, y, z from DFN object
-        cell_size : float
-            Hexahedron cell size
+        cell_size : list
+            Hexahedron cell size in x, y, z
 
     Returns
     -----------------
-        origin : list 
-            min_x, min_y, min_z values of domain
         nx : int
             Number of cells in x direction 
         ny : int
@@ -61,28 +61,45 @@ def setup_domain(domain, cell_size):
 
     Notes
     -----------------
-        Does not work for non-integer cells size
     
     
     
     """
     print("--> Computing discrete domain parameters")
-    origin = [-1 * domain['x'] / 2, -1 * domain['y'] / 2, -1 * domain['z'] / 2]
-    # Origin of area to map in DFN domain coordinates (0,0,0 is center of DFN)
+
     [nx, ny, nz] = [
-        int(domain['x'] / cell_size),
-        int(domain['y'] / cell_size),
-        int(domain['z'] / cell_size)
+        int(domain['x'] / cell_size[0]),
+        int(domain['y'] / cell_size[1]),
+        int(domain['z'] / cell_size[2])
     ]
 
     num_cells = nx * ny * nz
 
-    if domain['x'] % cell_size + domain['y'] % cell_size + domain[
-            'z'] % cell_size > 0:
+    #Check to see if evenly divides the domain, considering non integer cell sizes
+
+    #Convert cell_size to integer if it isn't one already
+    cell_size_x,domain_x = convert_to_integer(cell_size[0],domain['x'])
+    cell_size_y,domain_y = convert_to_integer(cell_size[1],domain['y'])
+    cell_size_z,domain_z = convert_to_integer(cell_size[2],domain['z'])
+    
+    if domain_x % cell_size_x + domain_y % cell_size_y + domain_z % cell_size_z:
         error_msg = f"Error: The cell size you've specified, {cell_size} m, does not evenly divide the domain. Domain size: {domain['x']} x {domain['y']} x {domain['z']} m^3."
         sys.stderr.write(error_msg)
         sys.exit(1)
     print(f"--> Hexahedron edge length {cell_size} m")
     print(f"--> Domain is {nx} x {ny} x {ny} cells. ")
     print(f"--> Total number of cells {num_cells}\n")
-    return origin, nx, ny, nz, num_cells
+    return nx, ny, nz, num_cells
+
+
+def convert_to_integer(cell_size,domain):
+
+    if (cell_size == int(cell_size)):
+        pass
+    else:
+        while ((cell_size) != int(cell_size)):
+            cell_size *= 10
+            domain *= 10
+
+    return cell_size,domain
+            

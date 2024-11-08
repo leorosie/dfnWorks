@@ -5,7 +5,7 @@ import time
 
 
 def create_h5_arrays(nx, ny, nz, cell_size, k_iso, k_aniso, matrix_perm,
-                     porosity, cell_fracture_id, matrix_on):
+                     porosity, cell_fracture_id, matrix_on, h5origin):
     """ Converts values into arrays to be dumped into h5 files
 
     Parameters
@@ -23,15 +23,13 @@ def create_h5_arrays(nx, ny, nz, cell_size, k_iso, k_aniso, matrix_perm,
     
     """
 
-    #h5origin = [x - y for x, y in zip(domain_origin, domain_origin)]
-    h5origin = [0, 0, 0]
     # arrays for PFLOTRAN hf files
     x = np.zeros(nx + 1, '=f8')
-    x[nx] = h5origin[0] + nx * cell_size
+    x[nx] = h5origin[0] + nx * cell_size[0]
     y = np.zeros(ny + 1, '=f8')
-    y[ny] = h5origin[1] + ny * cell_size
+    y[ny] = h5origin[1] + ny * cell_size[1]
     z = np.zeros(nz + 1, '=f8')
-    z[nz] = h5origin[2] + nz * cell_size
+    z[nz] = h5origin[2] + nz * cell_size[2]
     fracture_id = np.zeros((nx, ny, nz), '=f8')
     khdf5 = np.zeros((nx, ny, nz), '=f8')
     kx = np.zeros((nx, ny, nz), '=f8')
@@ -42,9 +40,9 @@ def create_h5_arrays(nx, ny, nz, cell_size, k_iso, k_aniso, matrix_perm,
     index_set = itertools.product(range(nz), range(ny), range(nx))
     for k, j, i in index_set:
         # complute xyz coords
-        x[i] = h5origin[0] + i * cell_size
-        y[j] = h5origin[1] + j * cell_size
-        z[k] = h5origin[2] + k * cell_size
+        x[i] = h5origin[0] + i * cell_size[0]
+        y[j] = h5origin[1] + j * cell_size[1]
+        z[k] = h5origin[2] + k * cell_size[2]
         # compute linear index
         index = i + nx * j + nx * ny * k
         # convert linear index to 3D arrays
@@ -76,7 +74,7 @@ def create_h5_arrays(nx, ny, nz, cell_size, k_iso, k_aniso, matrix_perm,
 
 
 def write_h5_files(filenames, nx, ny, nz, cell_size, cell_fracture_id, k_iso,
-                   k_aniso, porosity, matrix_perm, tortuosity_factor, matrix_on):
+                   k_aniso, porosity, matrix_perm, tortuosity_factor, matrix_on,                   h5origin):
     """ Write informaiton into h5 files for pflotran run. 
 
     Parameters
@@ -101,7 +99,7 @@ def write_h5_files(filenames, nx, ny, nz, cell_size, cell_fracture_id, k_iso,
 
     x, y, z, material_id, khdf5, kx, ky, kz, phdf5, h5origin, idx_array, mat_array = create_h5_arrays(
         nx, ny, nz, cell_size, k_iso, k_aniso, matrix_perm, porosity,
-        cell_fracture_id, matrix_on)
+        cell_fracture_id, matrix_on,h5origin)
     print("** Dumping h5 files **")
     t0 = time.time()
 
@@ -136,7 +134,7 @@ def write_h5_files(filenames, nx, ny, nz, cell_size, cell_fracture_id, k_iso,
         # 3D will always be XYZ where as 2D can be XY, XZ, etc. and 1D can be X, Y or Z
         h5grp.attrs['Dimension'] = np.string_('XYZ')
         # based on Dimension, specify the uniform grid spacing
-        h5grp.attrs['Discretization'] = [cell_size, cell_size, cell_size]
+        h5grp.attrs['Discretization'] = [cell_size[0], cell_size[1], cell_size[2]]
         # again, depends on Dimension
         h5grp.attrs['Origin'] = h5origin
         # leave this line out if not cell centered.  If set to False, it will still
@@ -156,13 +154,13 @@ def write_h5_files(filenames, nx, ny, nz, cell_size, cell_fracture_id, k_iso,
         # 3D will always be XYZ where as 2D can be XY, XZ, etc. and 1D can be X, Y or Z
         h5grp.attrs['Dimension'] = np.string_('XYZ')
         # based on Dimension, specify the uniform grid spacing
-        h5grp.attrs['Discretization'] = [cell_size, cell_size, cell_size]
+        h5grp.attrs['Discretization'] = [cell_size[0], cell_size[1], cell_size[2]]
         # again, depends on Dimension
         h5grp.attrs['Origin'] = h5origin
         # leave this line out if not cell centered.  If set to False, it will still
         # be true (issue with HDF5 and Fortran)
         h5grp.attrs['Cell Centered'] = [True]
-        h5grp.attrs['Interpolation Method'] = np.string_('Step')
+        h5grp.attrs['Space Interpolation Method'] = np.string_('Step')
         h5grp.create_dataset('Data', data=phdf5)
 
     # Write tortuosity as a gridded dataset for use with PFLOTRAN.
@@ -175,13 +173,13 @@ def write_h5_files(filenames, nx, ny, nz, cell_size, cell_fracture_id, k_iso,
         # 3D will always be XYZ where as 2D can be XY, XZ, etc. and 1D can be X, Y or Z
         h5grp.attrs['Dimension'] = np.string_('XYZ')
         # based on Dimension, specify the uniform grid spacing
-        h5grp.attrs['Discretization'] = [cell_size, cell_size, cell_size]
+        h5grp.attrs['Discretization'] = [cell_size[0], cell_size[1], cell_size[2]]
         # again, depends on Dimension
         h5grp.attrs['Origin'] = h5origin
         # leave this line out if not cell centered.  If set to False, it will still
         # be true (issue with HDF5 and Fortran)
         h5grp.attrs['Cell Centered'] = [True]
-        h5grp.attrs['Interpolation Method'] = np.string_('Step')
+        h5grp.attrs['Space Interpolation Method'] = np.string_('Step')
         h5grp.create_dataset('Data', data=tortuosity_factor / phdf5)
 
     # Write anisotropic permeability as a gridded dataset for use with PFLOTRAN.
@@ -194,13 +192,13 @@ def write_h5_files(filenames, nx, ny, nz, cell_size, cell_fracture_id, k_iso,
         # 3D will always be XYZ where as 2D can be XY, XZ, etc. and 1D can be X, Y or Z
         h5grp.attrs['Dimension'] = np.string_('XYZ')
         # based on Dimension, specify the uniform grid spacing
-        h5grp.attrs['Discretization'] = [cell_size, cell_size, cell_size]
+        h5grp.attrs['Discretization'] = [cell_size[0], cell_size[1], cell_size[2]]
         # again, depends on Dimension
         h5grp.attrs['Origin'] = h5origin
         # leave this line out if not cell centered.  If set to False, it will still
         # be true (issue with HDF5 and Fortran)
         h5grp.attrs['Cell Centered'] = [True]
-        h5grp.attrs['Interpolation Method'] = np.string_('Step')
+        h5grp.attrs['Space Interpolation Method'] = np.string_('Step')
         h5grp.create_dataset(
             'Data', data=kx)  #does this matter that it is also called data?
 
@@ -209,13 +207,13 @@ def write_h5_files(filenames, nx, ny, nz, cell_size, cell_fracture_id, k_iso,
         # 3D will always be XYZ where as 2D can be XY, XZ, etc. and 1D can be X, Y or Z
         h5grp.attrs['Dimension'] = np.string_('XYZ')
         # based on Dimension, specify the uniform grid spacing
-        h5grp.attrs['Discretization'] = [cell_size, cell_size, cell_size]
+        h5grp.attrs['Discretization'] = [cell_size[0], cell_size[1], cell_size[2]]
         # again, depends on Dimension
         h5grp.attrs['Origin'] = h5origin
         # leave this line out if not cell centered.  If set to False, it will still
         # be true (issue with HDF5 and Fortran)
         h5grp.attrs['Cell Centered'] = [True]
-        h5grp.attrs['Interpolation Method'] = np.string_('Step')
+        h5grp.attrs['Space Interpolation Method'] = np.string_('Step')
         h5grp.create_dataset(
             'Data', data=ky)  #does this matter that it is also called data?
 
@@ -224,13 +222,13 @@ def write_h5_files(filenames, nx, ny, nz, cell_size, cell_fracture_id, k_iso,
         # 3D will always be XYZ where as 2D can be XY, XZ, etc. and 1D can be X, Y or Z
         h5grp.attrs['Dimension'] = np.string_('XYZ')
         # based on Dimension, specify the uniform grid spacing
-        h5grp.attrs['Discretization'] = [cell_size, cell_size, cell_size]
+        h5grp.attrs['Discretization'] = [cell_size[0], cell_size[1], cell_size[2]]
         # again, depends on Dimension
         h5grp.attrs['Origin'] = h5origin
         # leave this line out if not cell centered.  If set to False, it will still
         # be true (issue with HDF5 and Fortran)
         h5grp.attrs['Cell Centered'] = [True]
-        h5grp.attrs['Interpolation Method'] = np.string_('Step')
+        h5grp.attrs['Space Interpolation Method'] = np.string_('Step')
         h5grp.create_dataset(
             'Data', data=kz)  #does this matter that it is also called data?
 
