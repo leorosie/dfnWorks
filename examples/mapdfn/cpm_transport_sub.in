@@ -24,11 +24,11 @@ SUBSURFACE
 #=========================== discretization ===================================
 GRID
   TYPE structured
-  NXYZ 10 5 2
+  NXYZ 100 100 100
   DXYZ
-    1.
-    2.
-    5.
+    0.1
+    0.1
+    0.1
   /
   GRAVITY 0.d0 0.d0 0.d0
 END
@@ -39,6 +39,31 @@ FLUID_PROPERTY
 END
 
 #=========================== datasets==========================================
+DATASET permX
+  FILENAME ../anisotropic_k.h5
+  HDF5_DATASET_NAME PermeabilityX
+END
+
+DATASET permY
+  FILENAME ../anisotropic_k.h5
+  HDF5_DATASET_NAME PermeabilityY
+END
+
+DATASET permZ
+  FILENAME ../anisotropic_k.h5
+  HDF5_DATASET_NAME PermeabilityZ
+END
+
+DATASET Tortuosity
+  FILENAME ../tortuosity.h5
+  HDF5_DATASET_NAME Tortuosity
+END
+
+DATASET Porosity
+  FILENAME ../porosity.h5
+  HDF5_DATASET_NAME Porosity
+END
+skip
 DATASET permX
   FILENAME anisotropic_k.h5
   HDF5_DATASET_NAME PermeabilityX
@@ -64,6 +89,58 @@ DATASET Porosity
   HDF5_DATASET_NAME Porosity
 END
 
+DATASET permX
+  FILENAME anisotropic_k.h5
+  HDF5_DATASET_NAME PermeabilityX
+END
+
+DATASET permY
+  FILENAME anisotropic_k.h5
+  HDF5_DATASET_NAME PermeabilityY
+END
+
+DATASET permZ
+  FILENAME anisotropic_k.h5
+  HDF5_DATASET_NAME PermeabilityZ
+END
+
+DATASET Tortuosity
+  FILENAME tortuosity.h5
+  HDF5_DATASET_NAME Tortuosity
+END
+
+DATASET Porosity
+  FILENAME porosity.h5
+  HDF5_DATASET_NAME Porosity
+END
+noskip
+#sub directoy
+
+DATASET subpermX
+  FILENAME ./anisotropic_k.h5
+  HDF5_DATASET_NAME PermeabilityX
+END
+
+DATASET subpermY
+  FILENAME ./anisotropic_k.h5
+  HDF5_DATASET_NAME PermeabilityY
+END
+
+DATASET subpermZ
+  FILENAME ./anisotropic_k.h5
+  HDF5_DATASET_NAME PermeabilityZ
+END
+
+
+DATASET subTortuosity
+  FILENAME ./tortuosity.h5
+  HDF5_DATASET_NAME Tortuosity
+END
+
+DATASET subPorosity
+  FILENAME ./porosity.h5
+  HDF5_DATASET_NAME Porosity
+END
 #=========================== chemistry ========================================
 CHEMISTRY
   PRIMARY_SPECIES
@@ -84,6 +161,17 @@ MATERIAL_PROPERTY soil1
   PERMEABILITY
     ANISOTROPIC
     DATASET perm
+  /
+END
+
+MATERIAL_PROPERTY sub
+  ID 2
+  POROSITY DATASET subPorosity
+  TORTUOSITY DATASET subTortuosity 
+  CHARACTERISTIC_CURVES default
+  PERMEABILITY
+    ANISOTROPIC
+    DATASET subperm
   /
 END
 
@@ -110,7 +198,7 @@ OUTPUT
     PERIODIC TIME 5. y between 10. y and 30. y
     PERIODIC TIME 10. y between 30. y and 50. y
   /
-  FORMAT HDF5
+  FORMAT VTK
   VARIABLES
     MATERIAL_ID_KLUDGE_FOR_VISIT
     PERMEABILITY
@@ -131,7 +219,7 @@ TIME
 END
 
 #=========================== regions ==========================================
-REGION All
+REGION all
   COORDINATES
     -1.d20 -1.d20 -1.d20
     1.d20 1.d20 1.d20
@@ -151,6 +239,13 @@ REGION outflow
   COORDINATES
     10. 0.0   0.0
     10. 1000. 1000.
+  /
+END
+
+REGION sub
+  COORDINATES
+    5. 5.0   5.0
+    6. 6.0 6.0
   /
 END
 #=========================== flow conditions ==================================
@@ -221,7 +316,7 @@ END
 INITIAL_CONDITION initial
   FLOW_CONDITION initial
   TRANSPORT_CONDITION initial
-  REGION All
+  REGION all
 END
 
 INITIAL_CONDITION inflow
@@ -244,7 +339,13 @@ END
 
 #=========================== stratigraphy couplers ============================
 STRATA 
-  FILE materials.h5
+  REGION all
+  MATERIAL soil1
+END
+
+STRATA 
+  REGION sub
+  MATERIAL sub
 END
 
 END_SUBSURFACE

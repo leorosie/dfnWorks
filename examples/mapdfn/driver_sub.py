@@ -11,7 +11,7 @@ from pydfnworks import *
 
 src_path = os.getcwd()
 
-jobname = f"{src_path}/output"
+jobname = f"{src_path}/output_subtest"
 
 DFN = DFNWORKS(jobname)
 
@@ -69,11 +69,18 @@ DFN.create_network()
 #DFN.dfn_flow()
 mat_perm = 1e-16
 mat_por = 0.1
-cell_size = [1.0,2.0,5.0]
+cell_size = [1.0,1.0,1.0]
 
 DFN.mapdfn_ecpm(mat_perm, mat_por, cell_size)
 
+mat_perm = 1e-16
+mat_por = 0.1
+cell_size = [0.1,0.1,0.1]
+sub_domain = [1,1,1]
+sub_origin = [5,5,5]
 
-DFN.dfnFlow_file = f"{src_path}/cpm_transport.in"
-DFN.local_dfnFlow_file = f"cpm_transport.in"
+DFN.mapdfn_ecpm(mat_perm, mat_por, cell_size,sub_domain=sub_domain,sub_origin=sub_origin)
+
+DFN.dfnFlow_file = f"{src_path}/cpm_transport_sub.in"
+DFN.local_dfnFlow_file = f"cpm_transport_sub.in"
 DFN.pflotran()
