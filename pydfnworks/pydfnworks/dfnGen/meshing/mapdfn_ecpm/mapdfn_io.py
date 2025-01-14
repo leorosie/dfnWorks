@@ -140,7 +140,7 @@ def write_h5_files(filenames, nx, ny, nz, cell_size, cell_fracture_id, k_iso,
         # leave this line out if not cell centered.  If set to False, it will still
         # be true (issue with HDF5 and Fortran)
         h5grp.attrs['Cell Centered'] = [True]
-        h5grp.attrs['Interpolation Method'] = np.string_('Step')
+        h5grp.attrs['Space Interpolation Method'] = np.string_('Step')
         h5grp.create_dataset(
             'Data', data=khdf5)  #does this matter that it is also called data?
 
