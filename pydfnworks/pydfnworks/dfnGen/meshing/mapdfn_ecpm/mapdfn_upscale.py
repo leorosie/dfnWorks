@@ -192,6 +192,7 @@ def mapdfn_perm_aniso(num_frac,
 
                 for ifrac in cell_fracture_id[icell]:
                     # normal = ellipses[ifrac]['normal']
+                    normal = normal_vectors[ifrac]
                     n1_temp = normal[0]
                     theta1_t = m.degrees(m.acos(n1_temp)) % 90
                     if abs(theta1_t - 45) <= min_n1:
